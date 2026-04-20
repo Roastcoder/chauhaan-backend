@@ -309,6 +309,14 @@ app.delete("/api/social-links/:id", auth, requireRole("admin"), (req, res) => {
 });
 
 // ── Settings ──────────────────────────────────────────────────────────────────
+// Public endpoint for frontend to fetch store info
+app.get("/api/settings/public", (req, res) => {
+  const publicKeys = ["store_info", "seo_config", "hero_config", "announcement_config"];
+  const settings = db.all2("SELECT * FROM settings WHERE key IN (?,?,?,?)", publicKeys)
+    .map(r => ({ ...r, value: JSON.parse(r.value) }));
+  res.json(settings);
+});
+
 app.get("/api/settings", auth, requireRole("admin"), (req, res) => {
   res.json(db.all2("SELECT * FROM settings").map(r => ({ ...r, value: JSON.parse(r.value) })));
 });
