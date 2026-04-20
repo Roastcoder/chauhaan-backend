@@ -18,7 +18,7 @@ async function initDb() {
   
   console.log('✅ MySQL database initialized');
   
-  // Return object with SQLite-like interface
+  // Return object with SQLite-like interface (but async)
   return {
     run2: async (sql, params = []) => {
       const conn = await pool.getConnection();
@@ -45,6 +45,18 @@ async function initDb() {
       } finally {
         conn.release();
       }
+    },
+    // Add synchronous-looking methods that return promises
+    run: (sql, params = []) => {
+      return pool.query(sql, params).catch(err => console.error('DB Error:', err));
+    },
+    get: async (sql, params = []) => {
+      const [rows] = await pool.query(sql, params);
+      return rows[0];
+    },
+    all: async (sql, params = []) => {
+      const [rows] = await pool.query(sql, params);
+      return rows;
     }
   };
 }
