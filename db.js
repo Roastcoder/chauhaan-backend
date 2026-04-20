@@ -231,8 +231,14 @@ function migrate() {
 }
 
 function seed() {
-  const existing = db.get2("SELECT COUNT(*) as c FROM users");
-  if (existing && existing.c > 0) return;
+  // Only seed if database is completely empty (no users AND no settings)
+  const existingUsers = db.get2("SELECT COUNT(*) as c FROM users");
+  const existingSettings = db.get2("SELECT COUNT(*) as c FROM settings");
+  
+  if ((existingUsers && existingUsers.c > 0) || (existingSettings && existingSettings.c > 0)) {
+    console.log("✅ Database already has data, skipping seed");
+    return;
+  }
 
   const adminId = uuidv4();
   const telecallerId = uuidv4();
