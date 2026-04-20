@@ -8,11 +8,23 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 
-// Choose database based on environment
-const dbModule = process.env.DB_TYPE === 'mysql' ? './db-mysql' : './db';
-const { initDb } = require(dbModule);
+// Choose database based on environment with fallback
+let dbModule = './db'; // Default to SQLite
+let dbType = 'SQLite';
 
-console.log(`🗄️  Using ${process.env.DB_TYPE === 'mysql' ? 'MySQL' : 'SQLite'} database`);
+if (process.env.DB_TYPE === 'mysql') {
+  try {
+    dbModule = './db-mysql';
+    dbType = 'MySQL';
+  } catch (err) {
+    console.warn('⚠️  MySQL module failed, falling back to SQLite');
+    dbModule = './db';
+    dbType = 'SQLite';
+  }
+}
+
+const { initDb } = require(dbModule);
+console.log(`🗄️  Using ${dbType} database`);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
