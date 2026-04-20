@@ -426,8 +426,19 @@ app.post("/api/upload", auth, requireRole("admin"), upload.array("files", 10), (
 // ── Start ─────────────────────────────────────────────────────────────────────
 initDb().then((database) => {
   db = database;
-  app.listen(PORT, () => console.log(`🚀 Backend running at http://localhost:${PORT}`));
+  console.log(`✅ Database initialized successfully`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Backend running on port ${PORT}`);
+    console.log(`📊 Database: ${dbType}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+  
+  server.on('error', (err) => {
+    console.error('❌ Server error:', err);
+    process.exit(1);
+  });
 }).catch(err => {
-  console.error("Failed to init DB:", err);
+  console.error("❌ Failed to init DB:", err);
+  console.error(err.stack);
   process.exit(1);
 });
