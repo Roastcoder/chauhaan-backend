@@ -11,8 +11,21 @@ const { initDb } = require("./db");
 const app = express();
 const PORT = 4000;
 const JWT_SECRET = "chauhaan-computers-secret-2024";
+const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
-app.use(cors({ origin: /^http:\/\/localhost(:\d+)?$/, credentials: true }));
+const ALLOWED_ORIGINS = [
+  /^http:\/\/localhost(:\d+)?$/,
+  "https://chauhancomputers.co.in",
+  "https://www.chauhancomputers.co.in",
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const allowed = ALLOWED_ORIGINS.some(o => typeof o === "string" ? o === origin : o.test(origin));
+    cb(allowed ? null : new Error("CORS blocked"), allowed);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 const uploadsDir = path.join(__dirname, "uploads");
@@ -371,7 +384,7 @@ app.delete("/api/newsletter/:id", auth, requireRole("admin"), (req, res) => {
 
 // ── Image upload ──────────────────────────────────────────────────────────────
 app.post("/api/upload", auth, requireRole("admin"), upload.array("files", 10), (req, res) => {
-  const urls = req.files.map(f => `http://localhost:${PORT}/uploads/${f.filename}`);
+  const urls = req.files.map(f => `${PUBLIC_URL}/uploads/${f.filename}`);
   res.json({ urls });
 });
 

@@ -54,6 +54,7 @@ async function initDb() {
   };
 
   createTables();
+  migrate();
   seed();
   return db;
 }
@@ -178,23 +179,25 @@ function createTables() {
   `);
   db.run(`
     CREATE TABLE IF NOT EXISTS contact_messages (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT,
-    subject TEXT,
-    message TEXT NOT NULL,
-    is_read INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    is_active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS loyalty_transactions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT,
+      subject TEXT,
+      message TEXT NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS loyalty_transactions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       points INTEGER NOT NULL,
@@ -204,6 +207,26 @@ function createTables() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
+  db.save();
+}
+
+// Adds missing tables to existing databases without wiping data
+function migrate() {
+  db.run(`CREATE TABLE IF NOT EXISTS contact_messages (
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT, subject TEXT,
+    message TEXT NOT NULL, is_read INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS loyalty_transactions (
+    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, points INTEGER NOT NULL,
+    type TEXT NOT NULL DEFAULT 'earn', description TEXT, order_reference TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`);
   db.save();
 }
 
@@ -270,6 +293,17 @@ function seed() {
     [uuidv4(), "Instagram", "https://instagram.com/chauhaan_computers", "instagram", 1, now, now]);
   db.run("INSERT INTO social_media_links (id,platform,url,icon_name,display_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?)",
     [uuidv4(), "Facebook", "https://facebook.com/chauhaan_computers", "facebook", 2, now, now]);
+
+  const banners = [
+    { title: "Premium Laptops & Desktops", subtitle: "Official Dell, HP, Lenovo & Apple Partner", image_url: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1200&q=80", cta_text: "Shop Now", cta_link: "/category/dell-laptop", page: "home", position: 1, banner_type: "hero" },
+    { title: "Expert Repair & IT Services", subtitle: "Certified technicians for all brands", image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80", cta_text: "Learn More", cta_link: "/services", page: "home", position: 2, banner_type: "promo" },
+    { title: "30 Days Hardware Warranty", subtitle: "On all products — terms apply", image_url: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1200&q=80", cta_text: "Contact Us", cta_link: "/contact", page: "home", position: 3, banner_type: "promo" },
+    { title: "MacBook Air M2 — Now Available", subtitle: "Supercharged by M2 chip", image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&q=80", cta_text: "View MacBooks", cta_link: "/category/macbook", page: "home", position: 4, banner_type: "hero" },
+  ];
+  for (const b of banners) {
+    db.run("INSERT INTO banners (id,title,subtitle,image_url,cta_text,cta_link,page,position,is_active,banner_type,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?,?)",
+      [uuidv4(), b.title, b.subtitle, b.image_url, b.cta_text, b.cta_link, b.page, b.position, b.banner_type, now, now]);
+  }
 
   db.save();
   console.log("✅ Database seeded with demo data");
