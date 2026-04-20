@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 const { initDb } = require("./db");
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 const JWT_SECRET = "chauhaan-computers-secret-2024";
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
