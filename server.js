@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -6,7 +7,12 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
-const { initDb } = require("./db");
+
+// Choose database based on environment
+const dbModule = process.env.DB_TYPE === 'mysql' ? './db-mysql' : './db';
+const { initDb } = require(dbModule);
+
+console.log(`🗄️  Using ${process.env.DB_TYPE === 'mysql' ? 'MySQL' : 'SQLite'} database`);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
