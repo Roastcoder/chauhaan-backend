@@ -13,14 +13,11 @@ let dbModule = './db'; // Default to SQLite
 let dbType = 'SQLite';
 
 if (process.env.DB_TYPE === 'mysql') {
-  try {
-    dbModule = './db-mysql';
-    dbType = 'MySQL';
-  } catch (err) {
-    console.warn('⚠️  MySQL module failed, falling back to SQLite');
-    dbModule = './db';
-    dbType = 'SQLite';
-  }
+  console.log('⚠️  MySQL is configured but not fully supported yet. Using SQLite instead.');
+  console.log('💡 To use MySQL, all routes need to be refactored to async/await.');
+  // Force SQLite even if DB_TYPE=mysql
+  dbModule = './db';
+  dbType = 'SQLite';
 }
 
 const { initDb } = require(dbModule);
