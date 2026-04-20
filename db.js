@@ -4,7 +4,7 @@ const path = require("path");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 
-const DB_PATH = path.join(__dirname, "data.db");
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data.db");
 
 let db;
 
