@@ -2,13 +2,15 @@
   "name": "chauhan-computers-backend",
   "version": "1.0.0",
   "type": "commonjs",
-  "main": "server.js",
+  "main": "server-async.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node server-async.js",
+    "dev": "node --watch server-async.js",
+    "start-sqlite": "node server.js",
     "init-db": "node init-db.js"
   },
   "dependencies": {
+    "axios": "^1.15.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "deasync": "^0.1.31",

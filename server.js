@@ -217,6 +217,11 @@ app.put("/api/leads/:id", auth, requireRole("admin", "telecaller"), (req, res) =
   res.json({ success: true });
 });
 
+app.delete("/api/leads/:id", auth, requireRole("admin"), (req, res) => {
+  db.run2("DELETE FROM leads WHERE id = ?", [req.params.id]);
+  res.json({ success: true });
+});
+
 app.post("/api/leads/bulk", auth, requireRole("admin"), (req, res) => {
   const { leads } = req.body;
   if (!Array.isArray(leads)) return res.status(400).json({ error: "leads array required" });
