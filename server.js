@@ -17,6 +17,7 @@ const ALLOWED_ORIGINS = [
   /^http:\/\/localhost(:\d+)?$/,
   "https://chauhancomputers.co.in",
   "https://www.chauhancomputers.co.in",
+  "https://hotpink-wolverine-210632.hostingersite.com",
 ];
 app.use(cors({
   origin: (origin, cb) => {
@@ -58,6 +59,9 @@ function requireRole(...roles) {
     next();
   };
 }
+
+// ── Health check ────────────────────────────────────────────────────────────
+app.get("/", (req, res) => res.json({ status: "ok", message: "Chauhaan Computers API is running 🚀" }));
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 app.post("/api/auth/login", (req, res) => {
