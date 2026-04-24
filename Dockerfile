@@ -20,7 +20,7 @@ ENV NODE_ENV=production
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost:4000/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4000/ || exit 1
 
 # Use index.js as the main entry point
 CMD ["node", "index.js"]
