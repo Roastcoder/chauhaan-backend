@@ -13,7 +13,7 @@ const { initDb } = require('./db-mysql');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const JWT_SECRET = "chauhaan-computers-secret-2024";
+const JWT_SECRET = process.env.JWT_SECRET || "chauhaan-computers-secret-2024";
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
 const ALLOWED_ORIGINS = [
@@ -365,6 +365,24 @@ app.post("/api/leads", auth, async (req, res) => {
     await db.run2("INSERT INTO leads (id,name,phone,email,source,product_interest,notes,customer_user_id) VALUES (?,?,?,?,?,?,?,?)",
       [id, name, phone, email || null, source || "manual", product_interest || null, notes || null, customer_user_id || null]);
     res.json(await db.get2("SELECT * FROM leads WHERE id = ?", [id]));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/leads/bulk", auth, requireRole("admin"), async (req, res) => {
+  try {
+    const { leads } = req.body;
+    if (!Array.isArray(leads)) return res.status(400).json({ error: "leads array required" });
+    
+    for (const l of leads) {
+      if (!l.name || !l.phone) continue;
+      const id = uuidv4();
+      await db.run2("INSERT INTO leads (id,name,phone,email,source,product_interest) VALUES (?,?,?,?,?,?)",
+        [id, l.name, l.phone, l.email || null, l.source || "manual", l.product_interest || null]);
+    }
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
