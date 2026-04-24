@@ -42,7 +42,7 @@ app.get("/", (req, res) => res.json({ status: "ok", message: "Chauhaan Computers
 async function startServer() {
   try {
     const pool = await connect();
-    console.log(`✅ MySQL database connected successfully`);
+    console.log(`✅ PostgreSQL database connected successfully`);
 
     // Ensure tables exist and seed data if empty
     await createTables(pool);
