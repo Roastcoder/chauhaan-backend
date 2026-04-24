@@ -35,8 +35,16 @@ app.use("/uploads", express.static(uploadsDir));
 
 // API Routes
 app.use("/api", routes);
-// Root health check (optional, already in routes but good for root level)
-app.get("/", (req, res) => res.json({ status: "ok", message: "Chauhaan Computers API is running 🚀" }));
+// Root health check with "hacker" interface
+app.get("/", (req, res) => res.json({ 
+  status: "ONLINE",
+  system: "CHAUHAAN_COMPUTERS_CORE",
+  version: "1.0.2-pg-stable",
+  database: "POSTGRESQL",
+  environment: process.env.NODE_ENV || "production",
+  message: "Access Granted. API is running 🚀",
+  timestamp: new Date().toISOString()
+}));
 
 // Initialize DB and start server
 async function startServer() {
