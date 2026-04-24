@@ -7,7 +7,7 @@ const { createTables, seed } = require('./config/init');
 const routes = require('./routes');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 const ALLOWED_ORIGINS = [
