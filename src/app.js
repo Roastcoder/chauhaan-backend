@@ -14,7 +14,6 @@ const ALLOWED_ORIGINS = [
   /^http:\/\/localhost(:\d+)?$/,
   "https://chauhancomputers.co.in",
   "https://www.chauhancomputers.co.in",
-  "https://hotpink-wolverine-210632.hostingersite.com",
 ];
 
 app.use(cors({
@@ -44,12 +43,12 @@ async function startServer() {
   try {
     const pool = await connect();
     console.log(`✅ MySQL database connected successfully`);
-    
+
     // Ensure tables exist and seed data if empty
     await createTables(pool);
     await seed(pool);
     console.log(`✅ Database schema verified and seeded`);
-    
+
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Backend running on port ${PORT}`);
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
