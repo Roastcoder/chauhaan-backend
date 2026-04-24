@@ -1,69 +1,8 @@
-const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const dbConfig = require('./mysql-config');
 
-let pool;
-
-async function initDb() {
-  pool = mysql.createPool({
-    ...dbConfig,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  });
-
-  await createTables();
-  await seed();
-  
-  console.log('✅ MySQL database initialized');
-  
-  // Return object with SQLite-like interface (but async)
-  return {
-    run2: async (sql, params = []) => {
-      const conn = await pool.getConnection();
-      try {
-        await conn.query(sql, params);
-      } finally {
-        conn.release();
-      }
-    },
-    get2: async (sql, params = []) => {
-      const conn = await pool.getConnection();
-      try {
-        const [rows] = await conn.query(sql, params);
-        return rows[0] || undefined;
-      } finally {
-        conn.release();
-      }
-    },
-    all2: async (sql, params = []) => {
-      const conn = await pool.getConnection();
-      try {
-        const [rows] = await conn.query(sql, params);
-        return rows;
-      } finally {
-        conn.release();
-      }
-    },
-    // Add synchronous-looking methods that return promises
-    run: (sql, params = []) => {
-      return pool.query(sql, params).catch(err => console.error('DB Error:', err));
-    },
-    get: async (sql, params = []) => {
-      const [rows] = await pool.query(sql, params);
-      return rows[0];
-    },
-    all: async (sql, params = []) => {
-      const [rows] = await pool.query(sql, params);
-      return rows;
-    }
-  };
-}
-
-async function createTables() {
+async function createTables(pool) {
   const conn = await pool.getConnection();
-  
   try {
     await conn.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -223,21 +162,16 @@ async function createTables() {
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
-
   } finally {
     conn.release();
   }
 }
 
-async function seed() {
+async function seed(pool) {
   const conn = await pool.getConnection();
-  
   try {
     const [rows] = await conn.query('SELECT COUNT(*) as c FROM users');
-    if (rows[0].c > 0) {
-      console.log('✅ Database already has data, skipping seed');
-      return;
-    }
+    if (rows[0].c > 0) return;
 
     const adminId = uuidv4();
     const telecallerId = uuidv4();
@@ -291,4 +225,4 @@ async function seed() {
   }
 }
 
-module.exports = { initDb };
+module.exports = { createTables, seed };

@@ -1,1 +1,1 @@
-require("./server-async.js");
+require("./src/app.js");

@@ -18,5 +18,5 @@ EXPOSE 4000
 # Set environment to production
 ENV NODE_ENV=production
 
-# Use server-async.js as the main entry point
-CMD ["node", "server-async.js"]
+# Use index.js as the main entry point
+CMD ["node", "index.js"]
