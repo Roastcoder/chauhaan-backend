@@ -13,7 +13,7 @@ function parseProduct(row) {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await db.all("SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC");
+    const products = await db.all("SELECT * FROM products WHERE is_active = true ORDER BY created_at DESC");
     res.json(products.map(parseProduct));
   } catch (err) {
     console.error(err);
@@ -50,7 +50,7 @@ exports.updateProduct = async (req, res) => {
   try {
     const { name, category, brand, price, description, stock_quantity, specs, images, is_active } = req.body;
     await db.run("UPDATE products SET name=?,category=?,brand=?,price=?,description=?,images=?,specs=?,stock_quantity=?,is_active=? WHERE id=?",
-      [name, category, brand, price, description, JSON.stringify(images || []), JSON.stringify(specs || {}), stock_quantity, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.params.id]);
+      [name, category, brand, price, description, JSON.stringify(images || []), JSON.stringify(specs || {}), stock_quantity, is_active !== undefined ? (is_active) : 1, req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

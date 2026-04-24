@@ -2,44 +2,45 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
 async function createTables(pool) {
-  const conn = await pool.getConnection();
+  const client = await pool.connect();
   try {
-    await conn.query(`
+    // Create tables using PostgreSQL syntax
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         full_name VARCHAR(255) NOT NULL DEFAULT '',
         phone VARCHAR(20),
         address TEXT,
         avatar_url TEXT,
-        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
         role VARCHAR(20) NOT NULL DEFAULT 'customer',
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS products (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         category VARCHAR(50) NOT NULL DEFAULT 'other',
         brand VARCHAR(100),
         price DECIMAL(10,2) NOT NULL DEFAULT 0,
         description TEXT,
-        images JSON,
-        specs JSON,
+        images JSONB,
+        specs JSONB,
         stock_quantity INT DEFAULT 0,
-        is_active TINYINT(1) NOT NULL DEFAULT 1,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS leads (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         phone VARCHAR(20) NOT NULL,
         email VARCHAR(255),
@@ -47,41 +48,41 @@ async function createTables(pool) {
         status VARCHAR(50) NOT NULL DEFAULT 'new',
         product_interest VARCHAR(255),
         notes TEXT,
-        assigned_to VARCHAR(36),
-        customer_user_id VARCHAR(36),
-        follow_up_at DATETIME,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        assigned_to UUID,
+        customer_user_id UUID,
+        follow_up_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS call_history (
-        id VARCHAR(36) PRIMARY KEY,
-        lead_id VARCHAR(36) NOT NULL,
-        telecaller_id VARCHAR(36) NOT NULL,
+        id UUID PRIMARY KEY,
+        lead_id UUID NOT NULL,
+        telecaller_id UUID NOT NULL,
         outcome VARCHAR(50) NOT NULL,
         remarks TEXT,
         duration_seconds INT,
-        follow_up_at DATETIME,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        follow_up_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS lead_remarks (
-        id VARCHAR(36) PRIMARY KEY,
-        lead_id VARCHAR(36) NOT NULL,
-        user_id VARCHAR(36),
+        id UUID PRIMARY KEY,
+        lead_id UUID NOT NULL,
+        user_id UUID,
         remark TEXT NOT NULL,
         remark_type VARCHAR(50),
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS banners (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         title VARCHAR(255) NOT NULL DEFAULT '',
         subtitle TEXT,
         image_url TEXT NOT NULL DEFAULT '',
@@ -89,110 +90,110 @@ async function createTables(pool) {
         cta_link VARCHAR(255),
         page VARCHAR(50) NOT NULL DEFAULT 'home',
         position INT NOT NULL DEFAULT 0,
-        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
         banner_type VARCHAR(50) NOT NULL DEFAULT 'hero',
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS social_media_links (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         platform VARCHAR(50) NOT NULL,
         url VARCHAR(255) NOT NULL,
         icon_name VARCHAR(50) NOT NULL DEFAULT '',
         display_order INT NOT NULL DEFAULT 0,
-        is_active TINYINT(1) NOT NULL DEFAULT 1,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS settings (
-        id VARCHAR(36) PRIMARY KEY,
-        \`key\` VARCHAR(100) UNIQUE NOT NULL,
-        value JSON,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        id UUID PRIMARY KEY,
+        key VARCHAR(100) UNIQUE NOT NULL,
+        value JSONB,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS loyalty_points (
-        id VARCHAR(36) PRIMARY KEY,
-        user_id VARCHAR(36) UNIQUE NOT NULL,
+        id UUID PRIMARY KEY,
+        user_id UUID UNIQUE NOT NULL,
         points INT NOT NULL DEFAULT 0,
         lifetime_earned INT NOT NULL DEFAULT 0,
         lifetime_redeemed INT NOT NULL DEFAULT 0,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS contact_messages (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255),
         subject VARCHAR(255),
         message TEXT NOT NULL,
-        is_read TINYINT(1) NOT NULL DEFAULT 0,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
-        is_active TINYINT(1) NOT NULL DEFAULT 1,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS loyalty_transactions (
-        id VARCHAR(36) PRIMARY KEY,
-        user_id VARCHAR(36) NOT NULL,
+        id UUID PRIMARY KEY,
+        user_id UUID NOT NULL,
         points INT NOT NULL,
         type VARCHAR(20) NOT NULL DEFAULT 'earn',
         description TEXT,
         order_reference VARCHAR(100),
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
   } finally {
-    conn.release();
+    client.release();
   }
 }
 
 async function seed(pool) {
-  const conn = await pool.getConnection();
+  const client = await pool.connect();
   try {
-    const [rows] = await conn.query('SELECT COUNT(*) as c FROM users');
-    if (rows[0].c > 0) return;
+    const { rows } = await client.query('SELECT COUNT(*) as c FROM users');
+    if (parseInt(rows[0].c) > 0) return;
 
     const adminId = uuidv4();
     const telecallerId = uuidv4();
     const customerId = uuidv4();
     const hash = (p) => bcrypt.hashSync(p, 10);
 
-    await conn.query(
-      'INSERT INTO users (id,email,password_hash,full_name,role) VALUES (?,?,?,?,?)',
+    await client.query(
+      'INSERT INTO users (id,email,password_hash,full_name,role) VALUES ($1,$2,$3,$4,$5)',
       [adminId, 'admin@chauhaan.com', hash('admin123'), 'Admin User', 'admin']
     );
-    await conn.query(
-      'INSERT INTO users (id,email,password_hash,full_name,role,phone) VALUES (?,?,?,?,?,?)',
+    await client.query(
+      'INSERT INTO users (id,email,password_hash,full_name,role,phone) VALUES ($1,$2,$3,$4,$5,$6)',
       [telecallerId, 'telecaller@chauhaan.com', hash('tele123'), 'Rahul Sharma', 'telecaller', '9876543210']
     );
-    await conn.query(
-      'INSERT INTO users (id,email,password_hash,full_name,role,phone) VALUES (?,?,?,?,?,?)',
+    await client.query(
+      'INSERT INTO users (id,email,password_hash,full_name,role,phone) VALUES ($1,$2,$3,$4,$5,$6)',
       [customerId, 'customer@chauhaan.com', hash('cust123'), 'Priya Mehta', 'customer', '9123456789']
     );
 
-    await conn.query(
-      'INSERT INTO loyalty_points (id,user_id,points,lifetime_earned) VALUES (?,?,?,?)',
+    await client.query(
+      'INSERT INTO loyalty_points (id,user_id,points,lifetime_earned) VALUES ($1,$2,$3,$4)',
       [uuidv4(), customerId, 250, 250]
     );
 
@@ -203,25 +204,25 @@ async function seed(pool) {
     ];
 
     for (const p of products) {
-      await conn.query(
-        'INSERT INTO products (id,name,category,brand,price,description,images,specs,stock_quantity) VALUES (?,?,?,?,?,?,?,?,?)',
+      await client.query(
+        'INSERT INTO products (id,name,category,brand,price,description,images,specs,stock_quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
         [uuidv4(), p.name, p.category, p.brand, p.price, p.description, JSON.stringify([]), JSON.stringify(p.specs), p.stock]
       );
     }
 
-    await conn.query(
-      'INSERT INTO settings (id,`key`,value) VALUES (?,?,?)',
+    await client.query(
+      'INSERT INTO settings (id,key,value) VALUES ($1,$2,$3)',
       [uuidv4(), 'store_info', JSON.stringify({ name: 'Chauhan Computers', address: 'B-5 A, Vaibhav Enclave, Malviya Nagar, Jaipur', phone: '09509317543', phone2: '08559965655', phone3: '09376721157', whatsapp: '919509317543', hours: 'Mon-Sat 10am-8pm' })]
     );
 
-    await conn.query(
-      'INSERT INTO settings (id,`key`,value) VALUES (?,?,?)',
+    await client.query(
+      'INSERT INTO settings (id,key,value) VALUES ($1,$2,$3)',
       [uuidv4(), 'inventory_config', JSON.stringify({ low_stock_threshold: 5 })]
     );
 
     console.log('✅ Database seeded with demo data');
   } finally {
-    conn.release();
+    client.release();
   }
 }
 

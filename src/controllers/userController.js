@@ -46,7 +46,7 @@ exports.updateUser = async (req, res) => {
     
     await db.run("UPDATE users SET full_name=?,phone=?,address=?,email=?,is_active=?,role=? WHERE id=?",
       [full_name ?? user.full_name, phone ?? user.phone, address ?? user.address, email ?? user.email,
-       is_active !== undefined ? (is_active ? 1 : 0) : user.is_active, role ?? user.role, req.params.id]);
+       is_active !== undefined ? (is_active) : user.is_active, role ?? user.role, req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

@@ -87,7 +87,7 @@ exports.updateSocialLink = async (req, res) => {
     const link = await db.get("SELECT * FROM social_media_links WHERE id = ?", [req.params.id]);
     if (!link) return res.status(404).json({ error: "Not found" });
     await db.run("UPDATE social_media_links SET is_active=?,url=?,platform=? WHERE id=?",
-      [is_active !== undefined ? (is_active ? 1 : 0) : link.is_active, url ?? link.url, platform ?? link.platform, req.params.id]);
+      [is_active !== undefined ? (is_active) : link.is_active, url ?? link.url, platform ?? link.platform, req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -164,7 +164,7 @@ exports.createContactMessage = async (req, res) => {
 
 exports.markContactMessageRead = async (req, res) => {
   try {
-    await db.run("UPDATE contact_messages SET is_read=1 WHERE id=?", [req.params.id]);
+    await db.run("UPDATE contact_messages SET is_read=true WHERE id=?", [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
