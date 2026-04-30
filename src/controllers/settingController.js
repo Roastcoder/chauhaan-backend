@@ -3,12 +3,21 @@ const { v4: uuidv4 } = require('uuid');
 
 exports.getPublicSettings = async (req, res) => {
   try {
-    const publicKeys = ["store_info", "seo_config", "hero_config", "announcement_config", "careers_config", "testimonials", "services_config"];
-    const settings = await db.all('SELECT * FROM settings WHERE "key" IN (?,?,?,?,?,?,?)', publicKeys);
-    res.json(settings.map(r => ({ 
-      ...r, 
-      value: typeof r.value === 'string' ? JSON.parse(r.value) : r.value 
-    })));
+    const publicKeys = ["store_info", "seo_config", "hero_config", "announcement_config", "careers_config", "testimonials", "services_config", "razorpay_config"];
+    const settings = await db.all('SELECT * FROM settings WHERE "key" IN (?,?,?,?,?,?,?,?)', publicKeys);
+    
+    const processed = settings.map(r => {
+      const value = typeof r.value === 'string' ? JSON.parse(r.value) : r.value;
+      
+      // SECURITY: Never expose Razorpay Secret to public
+      if (r.key === 'razorpay_config') {
+        return { ...r, value: { key_id: value?.key_id } };
+      }
+      
+      return { ...r, value };
+    });
+
+    res.json(processed);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
