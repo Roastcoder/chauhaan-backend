@@ -7,13 +7,13 @@ exports.getOrders = async (req, res) => {
     let query = `
       SELECT o.*, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone
       FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id::uuid = u.id::uuid
     `;
     const params = [];
 
     // If not admin, only show their own orders
     if (role !== 'admin') {
-      query += ` WHERE o.user_id = ?`;
+      query += ` WHERE o.user_id::uuid = ?::uuid`;
       params.push(userId);
     }
     
@@ -35,7 +35,7 @@ exports.getOrderDetails = async (req, res) => {
     const order = await db.get(`
       SELECT o.*, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone, u.address as customer_address
       FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id::uuid = u.id::uuid
       WHERE o.id = ?
     `, [id]);
 
