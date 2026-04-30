@@ -78,12 +78,15 @@ router.post("/newsletter", miscController.subscribeNewsletter);
 router.delete("/newsletter/:id", auth, requireRole("admin"), miscController.deleteNewsletterSubscriber);
 
 const paymentController = require('../controllers/paymentController');
+const orderController = require('../controllers/orderController');
 
 // ── Upload ──
 router.post("/upload", auth, requireRole("admin"), upload.array("files", 10), miscController.uploadFiles);
 
-// ── Payments ──
+// ── Payments & Orders ──
 router.post("/orders", auth, paymentController.createOrder);
 router.post("/verify-payment", auth, paymentController.verifyPayment);
+router.get("/orders", auth, orderController.getOrders);
+router.get("/orders/:id", auth, orderController.getOrderDetails);
 
 module.exports = router;
