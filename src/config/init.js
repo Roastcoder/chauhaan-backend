@@ -223,7 +223,7 @@ async function seed(pool) {
       [uuidv4(), customerId, 250, 250]
     );
 
-    const publicUrl = process.env.PUBLIC_URL || 'https://saddlebrown-lapwing-971744.hostingersite.com';
+    const publicUrl = process.env.PUBLIC_URL || 'https://backend.chauhancomputers.co.in';
     const products = [
       { name: 'Dell Inspiron 15', category: 'dell-laptop', brand: 'Dell', price: 49999, description: 'Versatile everyday laptop', stock: 10, image: 'dell-laptop.png', specs: { list: ['Intel Core i5-1335U', '16GB DDR5', '512GB NVMe SSD', '15.6" FHD IPS'], ram: '16GB', storage: '512GB SSD', rating: 4.4, reviews: 456, badge: 'Popular' } },
       { name: 'HP Pavilion 15', category: 'hp-laptop', brand: 'HP', price: 47999, description: 'Everyday laptop with AMD power', stock: 8, image: 'hp-laptop.png', specs: { list: ['AMD Ryzen 5 7530U', '16GB DDR4', '512GB NVMe SSD'], ram: '16GB', storage: '512GB SSD', rating: 4.3, reviews: 389 } },

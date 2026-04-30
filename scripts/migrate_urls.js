@@ -4,8 +4,12 @@ async function migrateUrls() {
   const pool = await connect();
   const client = await pool.connect();
   try {
-    const targetUrl = 'https://chauhancomputers.co.in';
-    const oldUrls = ['http://localhost:3000', 'https://saddlebrown-lapwing-971744.hostingersite.com'];
+    const targetUrl = 'https://backend.chauhancomputers.co.in';
+    const oldUrls = [
+      'http://localhost:3000', 
+      'https://chauhancomputers.co.in', 
+      'https://saddlebrown-lapwing-971744.hostingersite.com'
+    ];
 
     console.log(`Migrating URLs to ${targetUrl}...`);
 
