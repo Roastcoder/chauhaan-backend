@@ -39,7 +39,22 @@ const runMigrations = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('✅ order_items table created or verified.');
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blogs (
+        id VARCHAR(36) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        featured_image VARCHAR(255),
+        author VARCHAR(100),
+        status VARCHAR(20) DEFAULT 'published',
+        published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ blogs table created or verified.');
 
     console.log('Migrations completed successfully.');
   } catch (error) {

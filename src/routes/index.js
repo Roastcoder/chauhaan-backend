@@ -8,6 +8,9 @@ const leadController = require('../controllers/leadController');
 const settingController = require('../controllers/settingController');
 const bannerController = require('../controllers/bannerController');
 const miscController = require('../controllers/miscController');
+const paymentController = require('../controllers/paymentController');
+const orderController = require('../controllers/orderController');
+const blogController = require('../controllers/blogController');
 
 const { auth, requireRole } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
@@ -88,5 +91,13 @@ router.post("/orders", auth, paymentController.createOrder);
 router.post("/verify-payment", auth, paymentController.verifyPayment);
 router.get("/orders", auth, orderController.getOrders);
 router.get("/orders/:id", auth, orderController.getOrderDetails);
+
+// Blogs
+router.get("/blogs", blogController.getBlogs);
+router.get("/blogs/:slug", blogController.getBlogBySlug);
+router.get("/blogs/admin/all", auth, requireRole('admin'), blogController.getAllBlogs);
+router.post("/blogs", auth, requireRole('admin'), blogController.createBlog);
+router.put("/blogs/:id", auth, requireRole('admin'), blogController.updateBlog);
+router.delete("/blogs/:id", auth, requireRole('admin'), blogController.deleteBlog);
 
 module.exports = router;
