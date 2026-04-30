@@ -2,10 +2,16 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { db } = require('../config/db');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Helper to get Razorpay instance lazily
+const getRazorpayInstance = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error('Razorpay keys are not configured in environment variables');
+  }
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
 
 exports.createOrder = async (req, res) => {
   try {
@@ -22,6 +28,7 @@ exports.createOrder = async (req, res) => {
       receipt: receipt || `receipt_${Date.now()}`
     };
 
+    const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create(options);
     
     if (!order) {
