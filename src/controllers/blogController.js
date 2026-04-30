@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 exports.getBlogs = async (req, res) => {
   try {
-    const blogs = await db.all("SELECT * FROM blogs WHERE is_published = true ORDER BY published_at DESC");
+    const blogs = await db.all("SELECT * FROM blogs WHERE status = 'published' ORDER BY published_at DESC");
     res.json(blogs);
   } catch (err) {
     console.error(err);
@@ -34,15 +34,15 @@ exports.getAllBlogs = async (req, res) => {
 
 exports.createBlog = async (req, res) => {
   try {
-    const { title, excerpt, content, image_url, category, author, is_published } = req.body;
+    const { title, excerpt, content, featured_image, author, status } = req.body;
     if (!title || !content) return res.status(400).json({ error: "Title and content required" });
     
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const id = uuidv4();
     
     await db.run(
-      "INSERT INTO blogs (id, title, slug, excerpt, content, image_url, category, author, is_published) VALUES (?,?,?,?,?,?,?,?,?)",
-      [id, title, slug, excerpt || "", content, image_url || "", category || "tech", author || "Admin", is_published !== false]
+      "INSERT INTO blogs (id, title, slug, excerpt, content, featured_image, author, status) VALUES (?,?,?,?,?,?,?,?)",
+      [id, title, slug, excerpt || "", content, featured_image || "", author || "Admin", status || 'published']
     );
     
     const blog = await db.get("SELECT * FROM blogs WHERE id = ?", [id]);
@@ -55,15 +55,15 @@ exports.createBlog = async (req, res) => {
 
 exports.updateBlog = async (req, res) => {
   try {
-    const { title, excerpt, content, image_url, category, author, is_published } = req.body;
+    const { title, excerpt, content, featured_image, author, status } = req.body;
     const blog = await db.get("SELECT * FROM blogs WHERE id = ?", [req.params.id]);
     if (!blog) return res.status(404).json({ error: "Blog not found" });
     
     const slug = title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : blog.slug;
     
     await db.run(
-      "UPDATE blogs SET title=?, slug=?, excerpt=?, content=?, image_url=?, category=?, author=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-      [title || blog.title, slug, excerpt ?? blog.excerpt, content || blog.content, image_url ?? blog.image_url, category || blog.category, author || blog.author, is_published !== undefined ? is_published : blog.is_published, req.params.id]
+      "UPDATE blogs SET title=?, slug=?, excerpt=?, content=?, featured_image=?, author=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+      [title || blog.title, slug, excerpt ?? blog.excerpt, content || blog.content, featured_image ?? blog.featured_image, author || blog.author, status || blog.status, req.params.id]
     );
     
     res.json({ success: true });
