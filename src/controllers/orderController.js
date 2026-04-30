@@ -61,3 +61,29 @@ exports.getOrderDetails = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 };
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, id: userId } = req.user;
+
+    const order = await db.get("SELECT user_id, status FROM orders WHERE id = ?", [id]);
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    // Permissions
+    if (role !== 'admin' && order.user_id !== userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    if (order.status === 'paid') {
+      return res.status(400).json({ error: "Cannot modify a paid order" });
+    }
+
+    const status = req.body.status || 'cancelled';
+    await db.run("UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [status, id]);
+    res.json({ success: true, message: `Order marked as ${status}` });
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res.status(500).json({ error: "Failed to cancel order" });
+  }
+};

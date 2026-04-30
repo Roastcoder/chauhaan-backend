@@ -89,6 +89,7 @@ router.post("/orders", auth, paymentController.createOrder);
 router.post("/verify-payment", auth, paymentController.verifyPayment);
 router.get("/orders", auth, orderController.getOrders);
 router.get("/orders/:id", auth, orderController.getOrderDetails);
+router.post("/orders/:id/cancel", auth, orderController.cancelOrder);
 
 // Blogs
 router.get("/blogs", blogController.getBlogs);
