@@ -219,7 +219,7 @@ exports.deleteNewsletterSubscriber = async (req, res) => {
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 exports.uploadFiles = (req, res) => {
-  const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4000}`;
+  const PUBLIC_URL = process.env.PUBLIC_URL || 'https://backend.chauhancomputers.co.in';
   const urls = req.files.map(f => `${PUBLIC_URL}/uploads/${f.filename}`);
   res.json({ urls });
 };
