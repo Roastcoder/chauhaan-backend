@@ -22,13 +22,13 @@ exports.login = async (req, res) => {
 
 exports.signup = async (req, res) => {
   try {
-    const { email, password, full_name } = req.body;
-    if (!email || !password || !full_name) return res.status(400).json({ error: "Missing fields" });
+    const { email, password, full_name, phone } = req.body;
+    if (!email || !password || !full_name || !phone) return res.status(400).json({ error: "Missing fields" });
     if (await db.get("SELECT id FROM users WHERE email = ?", [email]))
       return res.status(400).json({ error: "Email already registered" });
     const id = uuidv4();
-    await db.run("INSERT INTO users (id,email,password_hash,full_name,role) VALUES (?,?,?,?,?)",
-      [id, email, bcrypt.hashSync(password, 10), full_name, "customer"]);
+    await db.run("INSERT INTO users (id,email,password_hash,full_name,role,phone) VALUES (?,?,?,?,?,?)",
+      [id, email, bcrypt.hashSync(password, 10), full_name, "customer", phone]);
     await db.run("INSERT INTO loyalty_points (id,user_id) VALUES (?,?)", [uuidv4(), id]);
     res.json({ message: "Account created" });
   } catch (err) {

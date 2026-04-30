@@ -223,16 +223,30 @@ async function seed(pool) {
       [uuidv4(), customerId, 250, 250]
     );
 
+    const publicUrl = process.env.PUBLIC_URL || 'https://saddlebrown-lapwing-971744.hostingersite.com';
     const products = [
-      { name: 'Dell Inspiron 15', category: 'dell-laptop', brand: 'Dell', price: 49999, description: 'Versatile everyday laptop', stock: 10, specs: { list: ['Intel Core i5-1335U', '16GB DDR5', '512GB NVMe SSD', '15.6" FHD IPS'], ram: '16GB', storage: '512GB SSD', rating: 4.4, reviews: 456, badge: 'Popular' } },
-      { name: 'HP Pavilion 15', category: 'hp-laptop', brand: 'HP', price: 47999, description: 'Everyday laptop with AMD power', stock: 8, specs: { list: ['AMD Ryzen 5 7530U', '16GB DDR4', '512GB NVMe SSD'], ram: '16GB', storage: '512GB SSD', rating: 4.3, reviews: 389 } },
-      { name: 'MacBook Air M2', category: 'macbook', brand: 'Apple', price: 99999, description: 'Supercharged by M2 chip', stock: 5, specs: { list: ['Apple M2 Chip', '8GB Unified Memory', '256GB SSD'], ram: '8GB', storage: '256GB SSD', rating: 4.8, reviews: 892, badge: 'Popular' } },
+      { name: 'Dell Inspiron 15', category: 'dell-laptop', brand: 'Dell', price: 49999, description: 'Versatile everyday laptop', stock: 10, image: 'dell-laptop.png', specs: { list: ['Intel Core i5-1335U', '16GB DDR5', '512GB NVMe SSD', '15.6" FHD IPS'], ram: '16GB', storage: '512GB SSD', rating: 4.4, reviews: 456, badge: 'Popular' } },
+      { name: 'HP Pavilion 15', category: 'hp-laptop', brand: 'HP', price: 47999, description: 'Everyday laptop with AMD power', stock: 8, image: 'hp-laptop.png', specs: { list: ['AMD Ryzen 5 7530U', '16GB DDR4', '512GB NVMe SSD'], ram: '16GB', storage: '512GB SSD', rating: 4.3, reviews: 389 } },
+      { name: 'MacBook Air M2', category: 'macbook', brand: 'Apple', price: 99999, description: 'Supercharged by M2 chip', stock: 5, image: 'macbook.png', specs: { list: ['Apple M2 Chip', '8GB Unified Memory', '256GB SSD'], ram: '8GB', storage: '256GB SSD', rating: 4.8, reviews: 892, badge: 'Popular' } },
     ];
 
     for (const p of products) {
       await client.query(
         'INSERT INTO products (id,name,category,brand,price,description,images,specs,stock_quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-        [uuidv4(), p.name, p.category, p.brand, p.price, p.description, JSON.stringify([]), JSON.stringify(p.specs), p.stock]
+        [uuidv4(), p.name, p.category, p.brand, p.price, p.description, JSON.stringify([`${publicUrl}/uploads/${p.image}`]), JSON.stringify(p.specs), p.stock]
+      );
+    }
+
+    // Seed initial banners
+    const banners = [
+      { title: 'Premium Laptops & Desktops', subtitle: 'Official Partner for Dell, HP & Lenovo', image: 'banner-hero-1.jpg', page: 'home', type: 'hero' },
+      { title: 'MacBook Air M2 — Now Available', subtitle: 'Supercharged by M2 chip. Strikingly thin design.', image: 'macbook.png', page: 'home', type: 'hero' }
+    ];
+
+    for (const b of banners) {
+      await client.query(
+        'INSERT INTO banners (id,title,subtitle,image_url,page,banner_type) VALUES ($1,$2,$3,$4,$5,$6)',
+        [uuidv4(), b.title, b.subtitle, `${publicUrl}/uploads/${b.image}`, b.page, b.type]
       );
     }
 

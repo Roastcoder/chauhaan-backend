@@ -15,15 +15,37 @@ const getRazorpayInstance = () => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const { amount, currency = "INR", receipt, items } = req.body;
+    const { items, currency = "INR", receipt, shipping_address, customer_phone } = req.body;
     const userId = req.user.id;
 
-    if (!amount) {
-      return res.status(400).json({ error: "Amount is required" });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "At least one item is required" });
+    }
+
+    // Securely calculate total amount from DB prices
+    let totalAmount = 0;
+    const verifiedItems = [];
+
+    for (const item of items) {
+      const product = await db.get("SELECT id, name, price FROM products WHERE id = ?", [item.product_id]);
+      if (!product) {
+        return res.status(404).json({ error: `Product not found: ${item.product_id}` });
+      }
+      
+      const price = Number(product.price);
+      const quantity = Math.max(1, parseInt(item.quantity) || 1);
+      totalAmount += price * quantity;
+      
+      verifiedItems.push({
+        product_id: product.id,
+        product_name: product.name,
+        quantity,
+        price
+      });
     }
 
     const options = {
-      amount: amount * 100, // amount in the smallest currency unit
+      amount: Math.round(totalAmount * 100), // amount in paise
       currency,
       receipt: receipt || `receipt_${Date.now()}`
     };
@@ -32,23 +54,21 @@ exports.createOrder = async (req, res) => {
     const order = await razorpay.orders.create(options);
     
     if (!order) {
-      return res.status(500).json({ error: "Some error occurred while creating order" });
+      return res.status(500).json({ error: "Razorpay order creation failed" });
     }
 
-    // Save order to DB
+    // Save order to DB (use verified totalAmount)
     await db.run(
-      `INSERT INTO orders (id, user_id, amount, currency, receipt, status) VALUES (?, ?, ?, ?, ?, ?)`,
-      [order.id, userId, amount, currency, options.receipt, 'created']
+      `INSERT INTO orders (id, user_id, amount, currency, receipt, status, shipping_address, customer_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [order.id, userId, totalAmount, currency, options.receipt, 'created', shipping_address, customer_phone]
     );
 
-    // Save order items to DB if provided
-    if (items && Array.isArray(items)) {
-      for (const item of items) {
-        await db.run(
-          `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)`,
-          [order.id, item.product_id, item.quantity, item.price]
-        );
-      }
+    // Save order items to DB
+    for (const item of verifiedItems) {
+      await db.run(
+        `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)`,
+        [order.id, item.product_id, item.quantity, item.price]
+      );
     }
 
     res.json(order);
@@ -74,8 +94,32 @@ exports.verifyPayment = async (req, res) => {
         `UPDATE orders SET status = ?, razorpay_payment_id = ?, razorpay_signature = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
         ['paid', razorpay_payment_id, razorpay_signature, razorpay_order_id]
       );
+
+      // --- LOYALTY REWARDS LOGIC ---
+      // 1. Get the order details to find user and amount
+      const order = await db.get("SELECT user_id, amount FROM orders WHERE id = ?", [razorpay_order_id]);
       
-      return res.status(200).json({ message: "Payment verified successfully", success: true });
+      if (order) {
+        // 2. Calculate points (1 point per 100 INR)
+        const pointsToEarn = Math.floor(Number(order.amount) / 100);
+        
+        if (pointsToEarn > 0) {
+          // 3. Update user's total loyalty points
+          await db.run(
+            "UPDATE loyalty_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+            [pointsToEarn, order.user_id]
+          );
+
+          // 4. Log the transaction
+          const { v4: uuidv4 } = require('uuid');
+          await db.run(
+            "INSERT INTO loyalty_transactions (id, user_id, points, type, description) VALUES (?, ?, ?, ?, ?)",
+            [uuidv4(), order.user_id, pointsToEarn, 'earn', `Points earned from purchase (Order #${razorpay_order_id.split('_')[1]})`]
+          );
+        }
+      }
+      
+      return res.status(200).json({ message: "Payment verified and loyalty points awarded", success: true });
     } else {
       // Mark order as failed
       await db.run(
