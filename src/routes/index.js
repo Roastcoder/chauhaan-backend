@@ -80,8 +80,6 @@ router.get("/newsletter", auth, requireRole("admin"), miscController.getNewslett
 router.post("/newsletter", miscController.subscribeNewsletter);
 router.delete("/newsletter/:id", auth, requireRole("admin"), miscController.deleteNewsletterSubscriber);
 
-const paymentController = require('../controllers/paymentController');
-const orderController = require('../controllers/orderController');
 
 // ── Upload ──
 router.post("/upload", auth, requireRole("admin"), upload.array("files", 10), miscController.uploadFiles);
