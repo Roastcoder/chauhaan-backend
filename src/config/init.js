@@ -197,10 +197,9 @@ async function createTables(pool) {
         slug VARCHAR(255) UNIQUE NOT NULL,
         excerpt TEXT,
         content TEXT NOT NULL,
-        image_url TEXT,
-        category VARCHAR(50) NOT NULL DEFAULT 'tech',
+        featured_image TEXT,
         author VARCHAR(100) NOT NULL DEFAULT 'Admin',
-        is_published BOOLEAN NOT NULL DEFAULT TRUE,
+        status VARCHAR(20) NOT NULL DEFAULT 'published',
         published_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
